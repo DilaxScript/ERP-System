@@ -22,7 +22,7 @@ class AttendanceSeeder extends Seeder
         foreach ($users as $user) {
             foreach (range(1, 30) as $value) {
                 Attendance::create([
-                    "user_id" => $user->id,
+                    "employee_id" => $user->id,
                     "status" => rand(0,2),
                     "created_at"=> Carbon::today()->subDays($value)
                 ]);

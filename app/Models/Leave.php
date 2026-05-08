@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class Leave extends Model
 {
@@ -16,7 +17,8 @@ class Leave extends Model
         'to_date',
         'reason',
         'status',
-        'number_of_days'
+        'number_of_days',
+        'attachment',
     ];
 
     // Cast dates to Carbon instances
@@ -45,4 +47,10 @@ class Leave extends Model
 
         return 0;
     }
+
+    public function getAttachmentUrlAttribute()
+    {
+        return $this->attachment ? route('leave.attachment', $this->id) : null;
+    }
+
 }

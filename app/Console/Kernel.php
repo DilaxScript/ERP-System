@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        // You don't need to register GenerateDailyQRCodes here manually
+        // Laravel auto-loads it if it's in app/Console/Commands
     ];
 
     /**
@@ -24,7 +25,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // ✅ Schedule the QR generation command daily at 12:00 AM
+        $schedule->command('generate:daily-qr')
+                 ->dailyAt('00:00')
+                 ->appendOutputTo(storage_path('logs/qr_cron.log')); // Optional: Logs output
     }
 
     /**

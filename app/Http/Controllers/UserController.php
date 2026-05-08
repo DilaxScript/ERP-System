@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\View;
 
@@ -81,6 +82,7 @@ class UserController extends Controller
                 "sallary" => ['required'],
                 "address" => ['required', 'string'],
                 "number" => ['required', 'string'],
+                "profile_image" => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             ],
         );
 
@@ -88,6 +90,11 @@ class UserController extends Controller
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
+        }
+
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImagePath = $request->file('profile_image')->store('profile-images', 'public');
         }
 
         User::create([
@@ -100,6 +107,7 @@ class UserController extends Controller
             "sallary" => $request->sallary,
             "address" => $request->address,
             "number" => $request->number,
+            "profile_image" => $profileImagePath,
         ]);
 
         return redirect()->route('users.index')->with([
@@ -112,6 +120,13 @@ class UserController extends Controller
     public function show(User $user)
     {
         return view("users.show", compact('user'));
+    }
+
+    public function profileImage(User $user)
+    {
+        abort_unless($user->profile_image && Storage::disk('public')->exists($user->profile_image), 404);
+
+        return Storage::disk('public')->response($user->profile_image);
     }
 
     /**
@@ -135,40 +150,38 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        if ($request->has("first_name")) {
-            $user->first_name = $request->first_name;
+        $validated = $request->validate([
+            "first_name" => ['required', 'string', 'max:255'],
+            "last_name" => ['required', 'string', 'max:255'],
+            "email" => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            "password" => ['nullable', 'string', 'min:6'],
+            "job" => ['nullable', 'exists:jobs,id'],
+            "gender" => ['required', 'in:0,1'],
+            "sallary" => ['nullable'],
+            "address" => ['nullable', 'string', 'max:255'],
+            "number" => ['nullable', 'string', 'max:255'],
+            "profile_image" => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $user->first_name = $validated['first_name'];
+        $user->last_name = $validated['last_name'];
+        $user->email = $validated['email'];
+        $user->job_id = $validated['job'] ?? null;
+        $user->sallary = $validated['sallary'] ?? null;
+        $user->address = $validated['address'] ?? null;
+        $user->number = $validated['number'] ?? null;
+        $user->gender = $validated['gender'];
+
+        if ($request->hasFile('profile_image')) {
+            if ($user->profile_image) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+
+            $user->profile_image = $request->file('profile_image')->store('profile-images', 'public');
         }
 
-        if ($request->has("last_name")) {
-            $user->last_name = $request->last_name;
-        }
-
-        if ($request->has("email")) {
-            $user->email = $request->email;
-        }
-
-        if ($request->has("password")) {
-            $user->password = bcrypt($request->password);
-        }
-
-        if ($request->has("job")) {
-            $user->job_id = $request->job;
-        }
-
-        if ($request->has("sallary")) {
-            $user->sallary = $request->sallary;
-        }
-
-        if ($request->has("address")) {
-            $user->address = $request->address;
-        }
-
-        if ($request->has("number")) {
-            $user->number = $request->number;
-        }
-
-        if ($request->has("gender")) {
-            $user->gender = $request->gender;
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
         }
 
         $user->save();
@@ -188,6 +201,10 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        if ($user->profile_image) {
+            Storage::disk('public')->delete($user->profile_image);
+        }
+
         $user->delete();
         return redirect()->route('users.index')->with([
             "message" => "User Deleted Successfully",

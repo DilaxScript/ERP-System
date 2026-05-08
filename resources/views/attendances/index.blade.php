@@ -1,6 +1,6 @@
 @extends("layouts.app")
 @php
-$title = 'Emplloyee Attendances';
+$title = 'Employee Attendance';
 @endphp
 @section('title', $title . 's')
 
@@ -12,36 +12,38 @@ $title = 'Emplloyee Attendances';
         <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
           <li class="breadcrumb-item">
             <a href="{{ route('dashboard') }}">
-              <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
                 </path>
               </svg>
             </a>
           </li>
-          <li class="breadcrumb-item"><a href="{{ route('users.index') }}">{{ $title }}s</a>
+          <li class="breadcrumb-item"><a href="{{ route('attendances.index') }}">{{ $title }}s</a>
           </li>
         </ol>
       </nav>
       <h2 class="h4">All {{ $title }}s</h2>
       <div>
 
-      <form method="GET" action="{{ route('attendances.index') }}" class="d-flex mb-3">
-    <input type="text" name="search" class="form-control" placeholder="Search by user name or date" value="{{ request('search') }}">
-    <input type="date" name="date" class="form-control ms-2" value="{{ request('date') }}">
-    <select name="status" class="form-select ms-2">
-        <option value="">Select Status</option>
-        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>At Work</option>
-        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Absent</option>
-        <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Late</option>
-    </select>
-    <button type="submit" class="btn btn-primary ms-2">Search</button>
-</form>
+        <form method="GET" action="{{ route('attendances.index') }}" class="d-flex mb-3">
+          <input type="text" name="search" class="form-control" placeholder="Search by employee name or email"
+            value="{{ request('search') }}">
+          <input type="date" name="date" class="form-control ms-2" value="{{ request('date') }}">
+          <select name="status" class="form-select ms-2">
+            <option value="">Select Status</option>
+            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>At Work</option>
+            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Absent</option>
+            <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Late</option>
+            <option value="3" {{ request('status') === '3' ? 'selected' : '' }}>Logged Out</option>
+          </select>
+          <button type="submit" class="btn btn-primary ms-2">Search</button>
+        </form>
 
-    </div>
+      </div>
     </div>
 
-    
     <div class="btn-toolbar mb-md-0 mb-2">
       <a href="{{ route('attendances.take-attendance') }}" class="btn btn-sm btn-gray-800 d-inline-flex align-items-center animate-up-2">
         <svg class="icon icon-xs me-2" viewBox="0 0 20 20" fill="currentColor">
@@ -62,41 +64,72 @@ $title = 'Emplloyee Attendances';
       <thead>
         <tr>
           <th class="border-gray-200">#</th>
+          <th class="border-gray-200">Employee ID</th>
           <th class="border-gray-200">Full Name</th>
-          <th class="border-gray-200">Job</th>
-          <th class="border-gray-200">Department</th>
+          <th class="border-gray-200">Date</th>
+          <th class="border-gray-200">Login Time</th>
+          <th class="border-gray-200">Logout Time</th>
           <th class="border-gray-200">Status</th>
           <th class="border-gray-200">Action</th>
         </tr>
       </thead>
       <tbody>
-
         @forelse ($users as $user)
           <tr>
-            <td class="fw-bold">{{ $loop->iteration }}</td>
+            <td class="fw-bold">{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
+            <td><span class="fw-normal">#{{ $user->id }}</span></td>
             <td><span class="fw-normal">{{ $user->full_name }}</span></td>
-            <td><span class="fw-normal text-success">{{ $user->job->title ?? 'Null' }}</span></td>
-            <td><span class="fw-normal text-info">{{ $user->job->department->name ?? 'Null' }}</span></td>
-            <td><span class="fw-normal">{!! $user->attendance ? "<span class='badge bg-info'>" . $user->attendance->status . '</span>' : "<span class='text-danger'>Null</span>" !!}</span></td>
+            <td><span class="fw-normal">{{ optional($user->attendance?->date)->format('Y-m-d') ?? '-' }}</span></td>
+            <td>
+              <span class="fw-normal">{{ $user->attendance && $user->attendance->login_time ? $user->attendance->login_time->format('H:i:s') : '-' }}</span>
+              @if($user->attendance && $user->attendance->login_method)
+                <div><span class="badge bg-light text-dark border">{{ $user->attendance->login_method_text }}</span></div>
+              @endif
+            </td>
+            <td>
+              <span class="fw-normal">{{ $user->attendance && $user->attendance->logout_time ? $user->attendance->logout_time->format('H:i:s') : '-' }}</span>
+              @if($user->attendance && $user->attendance->logout_method)
+                <div><span class="badge bg-light text-dark border">{{ $user->attendance->logout_method_text }}</span></div>
+              @endif
+            </td>
+            <td>
+              <span class="fw-normal">
+                @if($user->attendance)
+                  <span class="badge 
+                    {{ 
+                      $user->attendance->status_text == 'At Work' ? 'bg-success' : 
+                      ($user->attendance->status_text == 'Absent' ? 'bg-danger' : 
+                      ($user->attendance->status_text == 'Late' ? 'bg-warning text-dark' : 'bg-secondary'))
+                    }}">
+                    {{ $user->attendance->status_text }}
+                  </span>
+                @else
+                  <span class="text-danger">No Record</span>
+                @endif
+              </span>
+            </td>
             <td>
               <div class="btn-group">
-                <button class="btn btn-link text-dark dropdown-toggle dropdown-toggle-split m-0 p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-link text-dark dropdown-toggle dropdown-toggle-split m-0 p-0"
+                  data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="icon icon-sm">
                     <span class="fas fa-ellipsis-h icon-dark"></span>
                   </span>
                   <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
                 <div class="dropdown-menu py-0">
-                  <a class="dropdown-item" href="{{ route('attendances.user-attendance', $user->id) }}"><span class="fas fa-user me-2"></span>Full User Attendance</a>
+                  <a class="dropdown-item" href="{{ route('attendances.user-attendance', $user->id) }}">
+                    <span class="fas fa-user me-2"></span>Full User Attendance
+                  </a>
                 </div>
               </div>
             </td>
           </tr>
         @empty
+          <tr>
+            <td colspan="8" class="text-center text-muted">No attendance records found.</td>
+          </tr>
         @endforelse
-
-
-
       </tbody>
     </table>
     <div class="card-footer mt-3 border-0 px-3">

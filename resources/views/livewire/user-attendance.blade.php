@@ -18,7 +18,7 @@
           <td><span class="fw-normal">{{ $attendance->created_at->format('l') }}</span></td>
           <td><span class="fw-normal">{{ $attendance->created_at->format('F d, Y') }}</span>
           </td>
-          <td><span class="fw-normal"><span class='badge bg-info'> {{ $attendance->status }}</span></td>
+          <td><span class="fw-normal"><span class='badge bg-info'> {{ $attendance->status_text }}</span></td>
 
           @if (!auth()->user()->is_admin)
             <td><button class="btn me-3 btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#attendance_{{ $attendance->id }}">Complain</button></td>
@@ -40,18 +40,18 @@
               </div>
               <div class="modal-body px-md-5">
                 <h2 class="h4 text-center">Complain In {{ $attendance->created_at->format('F d, Y') }}</h2>
-                <p class="mb-4 text-center">Your Attendace Satatus is <span class="text-danger fw-bold">{{ $attendance->status }}</span>
+                <p class="mb-4 text-center">Your Attendace Satatus is <span class="text-danger fw-bold">{{ $attendance->status_text }}</span>
                 </p>
                 <form action="{{ route('attendances.attendanceComplain', $attendance->id) }}" method="POST">
                   @csrf
 
-                  <input type="hidden" name="current_status" value="{{ $attendance->status }}">
+                  <input type="hidden" name="current_status" value="{{ $attendance->status_text }}">
 
 
                   <div class="form-group mb-4">
                     <label for="email">Select Status</label>
                     @foreach ($statuses as $status)
-                      @if ($status === $attendance->status)
+                      @if ($status === $attendance->status_text)
                         @continue
                       @endif
                       <div class="form-check">

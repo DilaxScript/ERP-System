@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -27,7 +28,7 @@ class User extends Authenticatable
     ];
 
     // Add computed full_name attribute automatically
-    protected $appends = ['full_name'];
+    protected $appends = ['full_name', 'profile_image_url'];
 
     /**
      * Accessor: Get full name with title case.
@@ -35,6 +36,15 @@ class User extends Authenticatable
     public function getFullNameAttribute()
     {
         return Str::title(trim($this->first_name . ' ' . $this->last_name));
+    }
+
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->profile_image) {
+            return route('users.profile-image', $this->id);
+        }
+
+        return 'https://ui-avatars.com/api/?background=17355f&color=fff&size=256&name=' . urlencode($this->full_name ?: 'User Name');
     }
 
     /**
@@ -50,7 +60,7 @@ class User extends Authenticatable
      */
     public function attendance()
     {
-        return $this->hasOne(Attendance::class)->latestOfMany();
+        return $this->hasOne(Attendance::class, 'employee_id')->latestOfMany();
     }
 
     /**
@@ -58,7 +68,15 @@ class User extends Authenticatable
      */
     public function attendances()
     {
-        return $this->hasMany(Attendance::class)->orderByDesc('created_at');
+        return $this->hasMany(Attendance::class, 'employee_id')->orderByDesc('created_at');
+    }
+
+    /**
+     * Relationship: All leave requests for the user.
+     */
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class)->orderByDesc('from_date');
     }
 
     // Optional: Global scopes can be enabled here if needed in the future

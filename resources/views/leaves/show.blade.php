@@ -29,10 +29,11 @@ $title = 'Leave Request';
 
 <div class="card card-body table-wrapper table-responsive border-0 shadow">
     <h3 class="text-muted mb-3 text-center">
-        <span class="text-info">{{ $leave->user->name }}</span>'s Leave Request
+        <span class="text-info">{{ $leave->user->full_name ?? 'Unknown Employee' }}</span>'s Leave Request
     </h3>
     <h4 class="text-muted mb-3 text-center">
-        Leave Date: {{ \Carbon\Carbon::parse($leave->leave_date)->format('l, F d, Y') }}
+        From {{ \Carbon\Carbon::parse($leave->from_date)->format('l, F d, Y') }}
+        to {{ \Carbon\Carbon::parse($leave->to_date)->format('l, F d, Y') }}
     </h4>
 
     <div class="mt-4">
@@ -56,9 +57,17 @@ $title = 'Leave Request';
             <div class="col-3 fw-bold">Requested On:</div>
             <div class="col-9">{{ $leave->created_at->format('F d, Y - h:i A') }}</div>
         </div>
+        @if ($leave->attachment_url)
+        <div class="row mb-2">
+            <div class="col-3 fw-bold">Attachment:</div>
+            <div class="col-9">
+                <a href="{{ $leave->attachment_url }}" target="_blank">View Attachment</a>
+            </div>
+        </div>
+        @endif
     </div>
 
-    @if($leave->status == 'Pending')
+    @if(auth()->user()->is_admin && $leave->status == 'Pending')
     <div class="mt-4 d-flex">
         <form action="{{ route('leave.updateStatus', $leave->id) }}" method="POST">
             @csrf
@@ -72,7 +81,7 @@ $title = 'Leave Request';
             <button type="submit" class="btn btn-danger">Reject</button>
         </form>
     </div>
-    @else
+    @elseif($leave->status != 'Pending')
     <div class="mt-4 text-center text-muted">
         This leave has already been <strong>{{ $leave->status }}</strong>.
     </div>

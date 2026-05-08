@@ -39,7 +39,7 @@
 </div>
 
 <div class="card card-body border-0 shadow table-wrapper table-responsive">
-    <form action="{{ route('users.store') }}" method="POST">
+    <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data" data-profile-image-form>
         @csrf
         <div class="row">
             <div class="col-3">
@@ -71,6 +71,17 @@
                     <input type="email" class="form-control" id="email" aria-describedby="email"
                         name="email" value="{{ old("email") }}" placeholder="">
                     @error("email")
+                    <small class="form-text text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="mb-4">
+                    <label for="profile_image">Profile Image</label>
+                    <input type="file" class="form-control" id="profile_image"
+                        name="profile_image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                    <small class="text-muted d-block mt-2">Optional. Max 2 MB. Upload image இல்லையென்றால் avatar automatically use ஆகும்.</small>
+                    @error("profile_image")
                     <small class="form-text text-danger">{{ $message }}</small>
                     @enderror
                 </div>
@@ -167,4 +178,28 @@
         </div>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('[data-profile-image-form]');
+        const input = document.getElementById('profile_image');
+        const maxFileSize = 2 * 1024 * 1024;
+
+        if (!form || !input) {
+            return;
+        }
+
+        form.addEventListener('submit', function (event) {
+            const file = input.files && input.files[0];
+
+            if (file && file.size > maxFileSize) {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Image too large',
+                    text: 'Please upload a profile image smaller than 2 MB.',
+                });
+            }
+        });
+    });
+</script>
 @endsection

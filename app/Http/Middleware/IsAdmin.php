@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IsAdmin
 {
@@ -16,9 +17,16 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next)
     {
-        if(!auth()->user()->is_admin){
-            abort(403);
+        // Check if user is logged in
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
+
+        // Check if user is admin
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Access denied. Admins only.');
+        }
+
         return $next($request);
     }
 }

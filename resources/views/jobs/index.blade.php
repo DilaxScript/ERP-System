@@ -44,8 +44,6 @@
                 <th class="border-gray-200">#</th>
                 <th class="border-gray-200">Name</th>
                 <th class="border-gray-200">Department</th>
-                <th class="border-gray-200">Created At</th>
-                <th class="border-gray-200">Updated At</th>
                 <th class="border-gray-200">Action</th>
             </tr>
         </thead>
@@ -56,8 +54,6 @@
                 <td class="fw-bold">{{ $loop->iteration }}</td>
                 <td><span class="fw-normal">{{ $job->title }}</span></td>
                 <td><span class="fw-normal text-info">{{ $job->department->name?? "---" }}</span></td>
-                <td><span class="fw-normal">{{ $job->created_at }}</span></td>
-                <td><span class="fw-normal">{{ $job->updated_at }}</span></td>
                 <td>
                     <div class="btn-group">
                         <button
