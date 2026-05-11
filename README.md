@@ -2,6 +2,16 @@
 
 Laravel ERP System Demo is an employee attendance and leave management application built with Laravel, Livewire, Bootstrap 5, and MySQL. It includes admin screens for managing employees, departments, jobs, attendance, QR attendance, leave requests, and attendance reports.
 
+![image alt](image/login.png)
+![image alt](image/admin.png)
+![image alt](image/employee.png)
+![image alt](image/generator.png)
+![image alt](image/mail.png)
+![image alt](image/qr.png)
+![image alt](image/qrpage.png)
+![image alt](image/scan.png)
+
+   
 ## Features
 
 - Admin dashboard
